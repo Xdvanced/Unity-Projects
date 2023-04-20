@@ -6,20 +6,27 @@ using TMPro;
 public class BallController : MonoBehaviour
 {
 
-    [SerializeField] float speed = 30; // Initial Speed of ball
-    [SerializeField] float speedIncrement = 5f;
+    public float ballSpeed = 50; // Initial Speed of ball
+    [SerializeField] float speedIncrement = 10;
     private Rigidbody rb;
     public GameObject ballGameObject;
 
+    Vector3 lastVelocity;
+
     int score;
     public TMP_Text scoreDisplay;
+
+    void Awake()
+    {
+        rb = GetComponent<Rigidbody>();
+    }
 
     void Start()
     {
         float zRotationOnStart = Random.Range(100f, 500f);
 
-        rb = GetComponent<Rigidbody>();
-        rb.AddForce(new Vector3(9.8f * speed, 0, zRotationOnStart));
+        
+        rb.AddForce(new Vector3(9.8f * ballSpeed, 0, zRotationOnStart));
     }
 
     private void OnCollisionEnter(Collision collision)
@@ -28,13 +35,19 @@ public class BallController : MonoBehaviour
         if (collision.gameObject.CompareTag("Player"))
         {
             // Increment speed of ball
-            speed += speedIncrement;
+            ballSpeed += speedIncrement;
+
+            score++;
+            scoreDisplay.text = "" + score;
         }
 
         if (collision.gameObject.CompareTag("AI"))
         {
             // Increment speed of ball
-            speed += speedIncrement;
+            ballSpeed += speedIncrement;
+
+            score++;
+            scoreDisplay.text = "" + score;
         }
 
         if (collision.gameObject.CompareTag("LeftRightBorder"))
@@ -43,22 +56,15 @@ public class BallController : MonoBehaviour
             Destroy(ballGameObject);
         }
 
-        if (collision.gameObject.CompareTag("Player"))
-        {
-            score++;
-            scoreDisplay.text = "" + score;
-        }
+        var speed = lastVelocity.magnitude;
+        var direction = Vector3.Reflect(lastVelocity.normalized, collision.contacts[0].normal);
 
-        if (collision.gameObject.CompareTag("AI"))
-        {
-            score++;
-            scoreDisplay.text = "" + score;
-        }
+        rb.velocity = direction * Mathf.Max(speed, 0f);
     }
 
     // Update is called once per frame
-    private void FixedUpdate()
+    private void Update()
     {
-        
+        lastVelocity = rb.velocity;
     }
 }
